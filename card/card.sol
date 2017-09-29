@@ -17,6 +17,9 @@ contract Ownable {
         owner = newOwner;
     }
 
+    /**
+     *constant uses when function onley "read" contract, without "edit"
+     */
     function getOwner() constant returns (address){
         return owner;
     }
