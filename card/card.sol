@@ -2,7 +2,9 @@ pragma solidity ^0.4.13;
  
 contract BusinessCard {
     
-    mapping (bytes32 => string) data;
+    mapping (bytes32 => string) repository;
+    
+    address owner;
     
     string name;
     
@@ -10,35 +12,22 @@ contract BusinessCard {
     
     uint year;
     
-    function getData(string key) constant returns (string) {
-        return data[sha256(key)];
-    }
-    
-    function setData(string key, string value) {
-        data[sha256(key)] = value;
-    }
-    
-    function getName() constant returns (string) {
-        return name;
-    }
-    
-    function setName(string newName) {
-        name = newName;
-    }
-    
-    function getAge() constant returns (uint) {
-        return age;
-    }
-    
-    function setAge(uint newAge) {
-        age = newAge;
+    function BusinessCard () {
+        owner = msg.sender;
     }
 
-    function getYear() constant returns (uint) {
-        return year;
+    function getOwner () constant returns (address){
+        return owner;
     }
     
-    function setYear(uint newYear){
-        year = newYear;
+    function getField(string key) constant returns (string) {
+        return repository[sha256(key)];
+    }
+    
+    function setField(string key, string value) {
+        require(msg.sender == owner);
+//        if(msg.sender != owner)
+//            throw;
+        repository[sha256(key)] = value;
     }
 }
