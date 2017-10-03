@@ -238,3 +238,32 @@ contract SimpleTokenCoin is MintableToken {
     uint32 public constant decimals = 18;
     
 }
+
+contract Crowdsale {
+    /**
+     * Contract owner. Money collector
+     */ 
+    address owner;
+    
+    /**
+     * Token currency
+     */ 
+    SimpleTokenCoin public token = new SimpleTokenCoin();
+    
+    uint start  = 1507038969;
+    
+    uint period = 28;
+
+    /**
+     * Set contract owner
+     */
+    function Crowdsale() {
+        owner = msg.sender;
+    }
+    
+    function() external payable {
+         require(now > start && now < start + period * 24 * 60 * 60); 
+         owner.transfer(msg.value);
+         token.mint(msg.sender, msg.value);
+    }
+}
