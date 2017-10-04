@@ -316,7 +316,17 @@ contract Crowdsale is Ownable{
     
     function createTokens() saleIsOn isUnderHardCap payable {
          mutisig.transfer(msg.value);
-         uint tokens = rate.mul(msg.value).div(1 ether);
+         uint tokens        = rate.mul(msg.value).div(1 ether);
+         uint bonusTokens   = 0;
+         
+         if(now < start + (period * 1 days).div(4)) {
+             bonusTokens = tokens.div(4);   // 25% bonus for first week
+         } else if(now >= start + (period * 1 days).div(4) && now < start + (period * 1 days).div(4).mul(2)) {
+          bonusTokens = tokens.div(10);     //10% bonus for second week
+         } else if(now >= start + (period * 1 days).div(4).mul(2) && now < start + (period * 1 days).div(4).mul(3)) {
+          bonusTokens = tokens.div(20);     //5% bonus for third week
+         }
+         
          token.mint(msg.sender, tokens);        
     }
     
