@@ -82,7 +82,7 @@ contract BasicToken is ERC20Basic {
   * @param _owner The address to query the the balance of. 
   * @return An uint256 representing the amount owned by the passed address.
   */
-  function balanceOf(address _owner) constant returns (uint256 balance) {
+  function balanceOf(address _owner) constant returns (uint256 ) {
     return balances[_owner];
   }
 
@@ -239,11 +239,19 @@ contract SimpleTokenCoin is MintableToken {
     
 }
 
-contract Crowdsale {
+contract Crowdsale is Ownable{
+    
+    using SafeMath for uint;
+    
     /**
      * Contract owner. Money collector
      */ 
-    address owner;
+    address mutisig;
+    
+    /**
+     * Eth limit for crowdsale
+     */
+    uint hardcap;
     
     /**
      * Token currency
@@ -253,17 +261,73 @@ contract Crowdsale {
     uint start  = 1507038969;
     
     uint period = 28;
+    
+    /**
+     * Rate for converting token to ether?
+     */
+    uint rate;
+    
+    /**
+     * Token percent for contract-owner
+     */
+    uint restrictedPercent;
+    
+    /**
+     * Adrres for tokens for contract-owner
+     */
+    address restricted;
+
+    /**
+     * Check active time for saling
+     */ 
+    modifier saleIsOn() {
+        require(now > start && now < start + period * 1 days);
+        _;
+    }
+
+    /**
+     * Check hardcap limit
+     */
+    modifier isUnderHardCap() {
+        require(mutisig.balance <= hardcap);
+        _;
+    }
 
     /**
      * Set contract owner
      */
     function Crowdsale() {
-        owner = msg.sender;
+        mutisig             = 0xEA15Adb66DC92a4BbCcC8Bf32fd25E2e86a2A770; //Contract owner address
+        restricted          = 0xb3eD172CC64839FB0C0Aa06aa129f402e994e7De; //address for tokens for contract-owner
+        restrictedPercent   = 40;
+        rate                = 100000000000000000000;
+        start               = 1500379200;
+        period              = 28;
+        hardcap             = 10000000000000000000000;
     }
     
+    /**
+     * Fallback function
+     * start when getting eth
+     */
     function() external payable {
-         require(now > start && now < start + period * 24 * 60 * 60); 
-         owner.transfer(msg.value);
-         token.mint(msg.sender, msg.value);
+        createTokens();
+    }
+    
+    function createTokens() saleIsOn isUnderHardCap payable {
+         mutisig.transfer(msg.value);
+         uint tokens = rate.mul(msg.value).div(1 ether);
+         token.mint(msg.sender, tokens);        
+    }
+    
+    /**
+     * Calculate contract owner tokens, minting
+     * closing crowdsale
+     */
+    function finishMinting() onlyOwner {
+        uint issuedTokenSupply  = token.totalSupply();
+        uint restrictedTokens   = issuedTokenSupply.mul(restrictedPercent).div(100 - restrictedPercent);
+        token.mint(restricted, restrictedTokens);
+        token.finishMinting();
     }
 }
